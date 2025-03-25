@@ -18,22 +18,17 @@ class _QuoteListState extends State<QuoteList> {
     Quote(author: 'Oscar Wilde', text: 'The truth is rarely pure and never simple')
   ];
 
-  void _showQuoteInputSheet({Quote? quote, int? index}) {
+  void _editQuote({Quote? quote, int? index}) {
+    final isEditing = quote != null;
     final TextEditingController authorController = TextEditingController(text: quote?.author ?? '');
     final TextEditingController textController = TextEditingController(text: quote?.text ?? '');
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            top: 16.0,
-            left: 16.0,
-            right: 16.0,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16.0,
-          ),
-          child: Column(
+        return AlertDialog(
+          title: Text(isEditing ? 'Edit Quote' : 'Add Quote'),
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
@@ -44,31 +39,27 @@ class _QuoteListState extends State<QuoteList> {
                 controller: textController,
                 decoration: InputDecoration(labelText: 'Quote'),
               ),
-              SizedBox(height: 16.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('Cancel'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        if (quote == null) {
-                          quotes.add(Quote(author: authorController.text, text: textController.text));
-                        } else if (index != null) {
-                          quotes[index] = Quote(author: authorController.text, text: textController.text);
-                        }
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: Text(quote == null ? 'Add' : 'Update'),
-                  ),
-                ],
-              ),
             ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  if (isEditing && index != null) {
+                    quotes[index] = Quote(author: authorController.text, text: textController.text);
+                  } else {
+                    quotes.add(Quote(author: authorController.text, text: textController.text));
+                  }
+                });
+                Navigator.pop(context);
+              },
+              child: Text(isEditing ? 'Update' : 'Add'),
+            ),
+          ],
         );
       },
     );
@@ -95,20 +86,17 @@ class _QuoteListState extends State<QuoteList> {
               });
             },
             update: () {
-              _showQuoteInputSheet(quote: quote, index: index);
+              _editQuote(quote: quote, index: index);
             },
           );
         }).toList(),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showQuoteInputSheet(),
+        onPressed: () => _editQuote(),
+        
         child: Icon(Icons.add),
         backgroundColor: Colors.redAccent,
       ),
     );
   }
 }
-
-
-
-
