@@ -12,6 +12,11 @@ Link Demo:
 
 ## Modify
 
+## Tugas 2
+
+
+## Tugas 1
+
 file quote.dart tetap sama sesuai dengan referensi
 <br>
 untuk create saya pakai floating action button, yang saya tambahakn sebelumnya di kelas<br>
