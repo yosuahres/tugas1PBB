@@ -1,6 +1,6 @@
 # kelas PBB
 
-Tugas PBB 1
+Tugas PBB 2
 
 ## Link
 
@@ -8,7 +8,7 @@ Sumber referensi:
 https://github.com/iamshaunjp/flutter-beginners-tutorial/tree/lesson-21/quotes
 
 Link Demo:
-https://youtu.be/Yjvw0AkXb5Y
+
 
 ## Modify
 

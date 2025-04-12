@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'quote.dart';
 import 'quote_card.dart';
+import 'database/app_database.dart';
 
-void main() => runApp(MaterialApp(
-  home: QuoteList()
-));
+void main() => runApp(MaterialApp(home: QuoteList()));
 
 class QuoteList extends StatefulWidget {
   @override
@@ -12,16 +11,28 @@ class QuoteList extends StatefulWidget {
 }
 
 class _QuoteListState extends State<QuoteList> {
-  List<Quote> quotes = [
-    Quote(author: 'Oscar Wilde', text: 'Be yourself; everyone else is already taken'),
-    Quote(author: 'Oscar Wilde', text: 'I have nothing to declare except my genius'),
-    Quote(author: 'Oscar Wilde', text: 'The truth is rarely pure and never simple')
-  ];
+  List<Quote> quotes = [];
+  final AppDatabase _dbHelper = AppDatabase.instance; // Use AppDatabase singleton
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuotes();
+  }
+
+  Future<void> _loadQuotes() async {
+    final data = await _dbHelper.readAllQuotes(); // Fetch all quotes from the database
+    setState(() {
+      quotes = data;
+    });
+  }
 
   void _editQuote({Quote? quote, int? index}) {
     final isEditing = quote != null;
-    final TextEditingController authorController = TextEditingController(text: quote?.author ?? '');
-    final TextEditingController textController = TextEditingController(text: quote?.text ?? '');
+    final TextEditingController authorController =
+        TextEditingController(text: quote?.author ?? '');
+    final TextEditingController textController =
+        TextEditingController(text: quote?.text ?? '');
 
     showDialog(
       context: context,
@@ -47,14 +58,20 @@ class _QuoteListState extends State<QuoteList> {
               child: Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  if (isEditing && index != null) {
-                    quotes[index] = Quote(author: authorController.text, text: textController.text);
-                  } else {
-                    quotes.add(Quote(author: authorController.text, text: textController.text));
-                  }
-                });
+              onPressed: () async {
+                final newQuote = Quote(
+                  id: quote?.id,
+                  author: authorController.text,
+                  text: textController.text,
+                );
+
+                if (isEditing && index != null) {
+                  await _dbHelper.updateQuote(newQuote); // Update quote in the database
+                } else {
+                  await _dbHelper.createQuote(newQuote); // Insert new quote into the database
+                }
+
+                _loadQuotes(); // Reload quotes after the operation
                 Navigator.pop(context);
               },
               child: Text(isEditing ? 'Update' : 'Add'),
@@ -74,26 +91,24 @@ class _QuoteListState extends State<QuoteList> {
         centerTitle: true,
         backgroundColor: Colors.redAccent,
       ),
-      body: Column(
-        children: quotes.asMap().entries.map((entry) {
-          int index = entry.key;
-          Quote quote = entry.value;
+      body: ListView.builder(
+        itemCount: quotes.length,
+        itemBuilder: (context, index) {
+          final quote = quotes[index];
           return QuoteCard(
             quote: quote,
-            delete: () {
-              setState(() {
-                quotes.removeAt(index);
-              });
+            delete: () async {
+              await _dbHelper.deleteQuote(quote.id!); // Delete quote from the database
+              _loadQuotes(); // Reload quotes after deletion
             },
             update: () {
-              _editQuote(quote: quote, index: index);
+              _editQuote(quote: quote, index: index); // Open edit dialog
             },
           );
-        }).toList(),
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _editQuote(),
-        
         child: Icon(Icons.add),
         backgroundColor: Colors.redAccent,
       ),
